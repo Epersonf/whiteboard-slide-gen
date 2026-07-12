@@ -1,6 +1,6 @@
 import type { Project } from '../types';
 
-/** Serializa o projeto inteiro (tema + slides) como JSON legível. */
+/** Serializa o projeto inteiro (tema + elementos) como JSON legível. */
 export function serializeProject(project: Project): string {
   return JSON.stringify(project, null, 2);
 }
@@ -17,8 +17,8 @@ export function parseProjectJson(text: string): Project {
     throw new Error('JSON inválido: esperado um objeto de projeto.');
   }
   const project = data as Partial<Project>;
-  if (!Array.isArray(project.slides)) {
-    throw new Error('JSON inválido: campo "slides" ausente ou não é uma lista.');
+  if (!Array.isArray(project.elements)) {
+    throw new Error('JSON inválido: campo "elements" ausente ou não é uma lista.');
   }
   if (!project.settings || typeof project.settings !== 'object') {
     throw new Error('JSON inválido: campo "settings" ausente.');
@@ -27,7 +27,7 @@ export function parseProjectJson(text: string): Project {
     id: typeof project.id === 'string' ? project.id : crypto.randomUUID(),
     name: typeof project.name === 'string' ? project.name : 'Projeto importado',
     settings: project.settings,
-    slides: project.slides,
+    elements: project.elements,
   };
 }
 

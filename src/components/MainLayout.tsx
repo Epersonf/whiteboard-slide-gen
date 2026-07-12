@@ -1,7 +1,7 @@
 import { Stage } from './Stage';
 import { Transport } from './Transport';
 import { ThemePanel } from './ThemePanel';
-import { SlideList } from './SlideList';
+import { ElementsPanel } from './ElementsPanel';
 
 export function MainLayout() {
   return (
@@ -12,7 +12,7 @@ export function MainLayout() {
       </div>
       <div className="side-column">
         <ThemePanel />
-        <SlideList />
+        <ElementsPanel />
       </div>
     </div>
   );

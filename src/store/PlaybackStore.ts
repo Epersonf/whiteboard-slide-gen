@@ -1,44 +1,43 @@
 import { makeAutoObservable } from 'mobx';
 
 /**
- * Estado de reprodução (índice do slide atual, se está tocando, progresso do
- * fade). É efêmero — existe só enquanto o preview está tocando — por isso
- * vive numa instância local (useState) dentro de <StageColumn>, nunca no
- * ProjectStore: misturar os dois faria o dado do projeto "piscar" a cada
- * frame de reprodução.
+ * Estado de reprodução do quadro único (tocando ou não, visível ou não
+ * durante o fade). É efêmero — existe só enquanto o preview está tocando —
+ * por isso vive numa instância separada do ProjectStore: misturar os dois
+ * faria o dado do projeto "piscar" a cada troca de opacidade.
  */
 export class PlaybackStore {
-  currentIndex = 0;
   isPlaying = false;
-  /** 'in' | 'hold' | 'out' — fase visual do slide atual durante o play. */
-  phase: 'in' | 'hold' | 'out' = 'hold';
+  /** Alvo de opacidade do quadro durante o play — o CSS anima até esse valor. */
+  visible = true;
+  /** Elemento sendo editado no momento — o <Stage> desenha uma caixa de debug em cima dele. */
+  selectedElementId: string | null = null;
 
   constructor() {
     makeAutoObservable(this);
   }
 
-  play(totalSlides: number) {
-    if (totalSlides === 0) return;
-    if (this.currentIndex >= totalSlides) this.currentIndex = 0;
+  play() {
     this.isPlaying = true;
+    this.visible = false;
   }
 
   stop() {
     this.isPlaying = false;
-    this.phase = 'hold';
+    this.visible = true;
   }
 
-  setIndex(index: number) {
-    this.currentIndex = index;
+  setVisible(visible: boolean) {
+    this.visible = visible;
   }
 
-  setPhase(phase: 'in' | 'hold' | 'out') {
-    this.phase = phase;
+  selectElement(id: string | null) {
+    this.selectedElementId = id;
   }
 
   reset() {
-    this.currentIndex = 0;
     this.isPlaying = false;
-    this.phase = 'hold';
+    this.visible = true;
+    this.selectedElementId = null;
   }
 }

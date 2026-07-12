@@ -1,8 +1,9 @@
 # whiteboard-slide-gen
 
-Editor de slides (texto + imagem) com cores configuráveis, transições
-padronizadas em fade e exportação em vídeo — MP4 (alta qualidade, via
-ffmpeg.wasm) ou WebM (necessário para fundo transparente).
+Editor de um único quadro (slide) com múltiplos elementos de texto e imagem
+posicionados livremente (x/y/z, fade de entrada/saída), cores configuráveis
+e exportação em vídeo — MP4 (alta qualidade, via ffmpeg.wasm) ou WebM
+(necessário para fundo transparente).
 
 ## Rodando
 

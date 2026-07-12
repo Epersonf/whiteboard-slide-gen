@@ -1,14 +1,17 @@
-// Contratos centrais do editor de slides. Um slide é um canvas com uma ou
-// mais 'elements' (texto e/ou imagem) posicionados livremente por x/y/z.
+// Contratos centrais do editor. O projeto é um único quadro (slide) — um
+// canvas com uma ou mais 'elements' (texto e/ou imagem) posicionados
+// livremente por x/y/z — exportado como um único arquivo de vídeo.
 
 /** Cor hex ("#rrggbb") ou o literal 'transparent' (fundo sem cor, canal alpha). */
 export type BackgroundColor = string;
 
 export const TRANSPARENT: BackgroundColor = 'transparent';
 
+export const DEFAULT_FADE_MS = 600;
+
 export type ElementBase = {
   id: string;
-  /** Posição do canto superior-esquerdo, em % da largura/altura do canvas (0-100). */
+  /** Posição do canto superior-esquerdo, em % da largura/altura do canvas. Sem limite — pode sangrar para fora do quadro. */
   x: number;
   y: number;
   /** Ordem de empilhamento — maior fica por cima. */
@@ -16,6 +19,12 @@ export type ElementBase = {
   /** Tamanho da caixa do elemento, em % da largura/altura do canvas (0-100). */
   width: number;
   height: number;
+  /** Fade suave de entrada, no início do tempo de exibição do quadro. */
+  fadeIn?: boolean;
+  /** Fade suave de saída, perto do fim do tempo de exibição do quadro. */
+  fadeOut?: boolean;
+  /** Duração do fade de entrada/saída, em ms. Se ausente, usa DEFAULT_FADE_MS. */
+  fadeMs?: number;
 };
 
 export type TextElement = ElementBase & {
@@ -25,6 +34,9 @@ export type TextElement = ElementBase & {
   fontSize?: number; // px; se ausente, herda ProjectSettings.fontSize
   color?: string; // hex; se ausente, herda ProjectSettings.textColor
   align?: 'left' | 'center' | 'right'; // default: 'center'
+  fontWeight?: number; // 300-900; default: 400
+  italic?: boolean; // default: false
+  underline?: boolean; // default: false
 };
 
 export type ImageElement = ElementBase & {
@@ -36,22 +48,15 @@ export type ImageElement = ElementBase & {
 
 export type SlideElement = TextElement | ImageElement;
 
-export type Slide = {
-  id: string;
-  duration: number; // segundos — tempo visível, sem contar a transição
-  background?: BackgroundColor; // se ausente, herda ProjectSettings.background
-  elements: SlideElement[];
-};
-
 export type ExportFormat = 'mp4' | 'webm';
 
 export type ProjectSettings = {
-  background: BackgroundColor; // cor de fundo padrão do projeto (hex ou 'transparent')
-  textColor: string; // cor de texto padrão do projeto (hex)
+  background: BackgroundColor; // cor de fundo do quadro (hex ou 'transparent')
+  textColor: string; // cor de texto padrão para novos elementos
   fontFamily: string; // fonte padrão para novos elementos de texto
   fontSize: number; // tamanho padrão (px)
-  duration: number; // duração padrão (segundos) para novos slides
-  transitionMs: number; // duração do fade — padronizada, um único valor pro projeto inteiro
+  duration: number; // segundos de exibição do quadro, sem contar os fades
+  transitionMs: number; // duração do fade de entrada/saída
   canvasWidth: number; // resolução de exportação, ex.: 1920
   canvasHeight: number; // ex.: 1080 (fixo em 16:9 no v1)
   fps: number; // ex.: 30
@@ -62,7 +67,7 @@ export type Project = {
   id: string;
   name: string;
   settings: ProjectSettings;
-  slides: Slide[];
+  elements: SlideElement[];
 };
 
 export const CURATED_FONTS: { label: string; family: string; googleFont?: string }[] = [

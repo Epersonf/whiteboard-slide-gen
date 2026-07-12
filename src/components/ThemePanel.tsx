@@ -41,7 +41,7 @@ export const ThemePanel = observer(function ThemePanel() {
       </label>
 
       <label className="field">
-        <span>Duração padrão do slide ({s.duration}s)</span>
+        <span>Duração do quadro ({s.duration}s)</span>
         <input
           type="number"
           min={0.5}

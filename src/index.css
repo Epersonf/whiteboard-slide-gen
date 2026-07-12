@@ -176,6 +176,27 @@ button, input, select, textarea {
   height: 100%;
 }
 
+.stage__debug-box {
+  position: absolute;
+  z-index: 9999;
+  border: 2px dashed var(--accent);
+  background: rgba(168, 80, 31, 0.08);
+  pointer-events: none;
+}
+
+.stage__debug-label {
+  position: absolute;
+  top: -22px;
+  left: 0;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
 .stage__text {
   width: 100%;
   height: 100%;
@@ -343,8 +364,7 @@ button.panel__header {
   font-size: 13px;
 }
 
-/* Script splitter */
-.script-splitter__textarea {
+.textarea-field {
   padding: 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -379,98 +399,7 @@ button.panel__header {
   background: var(--accent-hover);
 }
 
-/* Slide list */
-.slide-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.slide-item {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.slide-item--active {
-  border-color: var(--accent);
-}
-
-.slide-item__header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-}
-
-.slide-item__select {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  text-align: left;
-}
-
-.slide-item__badge {
-  flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-}
-
-.slide-item__snippet {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 14px;
-}
-
-.slide-item__actions {
-  display: flex;
-  gap: 2px;
-  flex-shrink: 0;
-}
-
-.slide-item__actions button {
-  border: none;
-  background: none;
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 4px;
-  font-size: 13px;
-}
-
-.slide-item__actions button:hover:not(:disabled) {
-  background: var(--border);
-}
-
-.slide-item__actions button:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.slide-item__controls {
-  padding: 10px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.slide-item__thumb {
+.element-thumb {
   max-width: 100%;
   max-height: 120px;
   border-radius: 6px;
@@ -485,24 +414,7 @@ button.panel__header {
   flex-wrap: wrap;
 }
 
-/* Elementos dentro de um slide */
-.slide-item__elements {
-  border-top: 1px solid var(--border);
-  padding-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.slide-item__elements-title {
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  opacity: 0.7;
-  margin: 0;
-}
-
+/* Elementos do quadro */
 .element-list {
   list-style: none;
   margin: 0;
@@ -592,6 +504,19 @@ button.panel__header {
 .element-row__zactions {
   display: flex;
   gap: 8px;
+}
+
+.fade-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.text-style-toggles {
+  display: flex;
+  gap: 16px;
 }
 
 /* Modal / Export dialog */

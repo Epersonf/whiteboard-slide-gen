@@ -1,7 +1,8 @@
-import { TRANSPARENT, type Project, type Slide, type SlideElement } from '../types';
+import { TRANSPARENT, type Project, type SlideElement } from '../types';
 import { computeElementBox, computeImageDrawRect, textPadding, wrapCanvasText, type CanvasSize } from '../lib/layout';
-import { resolveSlideBackground, resolveTextElementStyle } from '../lib/resolveStyle';
-import { buildTimeline, resolveFrameAt, type Timeline } from '../lib/timeline';
+import { resolveTextElementStyle, type ResolvedTextStyle } from '../lib/resolveStyle';
+import { computeElementFadeAlpha } from '../lib/fade';
+import { buildTimeline, resolveFrameAlphaAt, type Timeline } from '../lib/timeline';
 
 export type ImageCache = Map<string, HTMLImageElement>;
 
@@ -10,15 +11,15 @@ export async function preloadAssets(project: Project): Promise<ImageCache> {
   const fontSpecs = new Set<string>();
   const imageElements: { id: string; src: string }[] = [];
 
-  for (const slide of project.slides) {
-    for (const el of slide.elements) {
-      if (el.type === 'text') {
-        const family = el.fontFamily ?? project.settings.fontFamily;
-        const size = el.fontSize ?? project.settings.fontSize;
-        fontSpecs.add(`${size}px ${family}`);
-      } else {
-        imageElements.push({ id: el.id, src: el.src });
-      }
+  for (const el of project.elements) {
+    if (el.type === 'text') {
+      const family = el.fontFamily ?? project.settings.fontFamily;
+      const size = el.fontSize ?? project.settings.fontSize;
+      const weight = el.fontWeight ?? 400;
+      const style = el.italic ? 'italic' : 'normal';
+      fontSpecs.add(`${style} ${weight} ${size}px ${family}`);
+    } else {
+      imageElements.push({ id: el.id, src: el.src });
     }
   }
 
@@ -37,15 +38,38 @@ export async function preloadAssets(project: Project): Promise<ImageCache> {
   return cache;
 }
 
+function drawUnderline(ctx: CanvasRenderingContext2D, line: string, xAnchor: number, y: number, style: ResolvedTextStyle) {
+  if (!line) return;
+  const width = ctx.measureText(line).width;
+  const left = style.align === 'left' ? xAnchor : style.align === 'right' ? xAnchor - width : xAnchor - width / 2;
+  const thickness = Math.max(1, Math.round(style.fontSize * 0.06));
+  const underlineY = y + style.fontSize * 0.35;
+  ctx.save();
+  ctx.strokeStyle = style.color;
+  ctx.lineWidth = thickness;
+  ctx.beginPath();
+  ctx.moveTo(left, underlineY);
+  ctx.lineTo(left + width, underlineY);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawElement(
   ctx: CanvasRenderingContext2D,
   element: SlideElement,
   project: Project,
   canvasSize: CanvasSize,
   imageCache: ImageCache,
+  frameAlpha: number,
+  msSinceHoldStart: number,
+  holdDurationMs: number,
 ) {
+  const alpha = frameAlpha * computeElementFadeAlpha(element, msSinceHoldStart, holdDurationMs);
+  if (alpha <= 0) return;
+
   const box = computeElementBox(element, canvasSize);
   ctx.save();
+  ctx.globalAlpha = alpha;
   ctx.beginPath();
   ctx.rect(box.x, box.y, box.width, box.height);
   ctx.clip();
@@ -63,7 +87,7 @@ function drawElement(
     const lineHeight = Math.round(style.fontSize * 1.35);
 
     ctx.fillStyle = style.color;
-    ctx.font = `${style.fontSize}px ${style.fontFamily}`;
+    ctx.font = `${style.italic ? 'italic ' : ''}${style.fontWeight} ${style.fontSize}px ${style.fontFamily}`;
     ctx.textBaseline = 'middle';
     ctx.textAlign = style.align;
     const lines = wrapCanvasText(ctx, element.content, contentWidth);
@@ -72,33 +96,9 @@ function drawElement(
     const x = style.align === 'left' ? box.x + padding : style.align === 'right' ? box.x + box.width - padding : box.x + box.width / 2;
     for (const line of lines) {
       ctx.fillText(line, x, y);
+      if (style.underline) drawUnderline(ctx, line, x, y, style);
       y += lineHeight;
     }
-  }
-  ctx.restore();
-}
-
-function drawSlideLayer(
-  ctx: CanvasRenderingContext2D,
-  slide: Slide,
-  project: Project,
-  canvasSize: CanvasSize,
-  alpha: number,
-  imageCache: ImageCache,
-) {
-  if (alpha <= 0) return;
-  ctx.save();
-  ctx.globalAlpha = alpha;
-
-  const background = resolveSlideBackground(slide, project.settings);
-  if (background !== TRANSPARENT) {
-    ctx.fillStyle = background;
-    ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
-  }
-
-  const sorted = [...slide.elements].sort((a, b) => a.z - b.z);
-  for (const element of sorted) {
-    drawElement(ctx, element, project, canvasSize, imageCache);
   }
   ctx.restore();
 }
@@ -118,21 +118,29 @@ export function renderFrameAt(
   const canvasSize: CanvasSize = { width: project.settings.canvasWidth, height: project.settings.canvasHeight };
   ctx.clearRect(0, 0, canvasSize.width, canvasSize.height);
 
-  const frame = resolveFrameAt(t, timeline, project.settings.transitionMs);
-  if (frame.kind === 'empty') return;
-  if (frame.kind === 'solo') {
-    drawSlideLayer(ctx, project.slides[frame.slideIndex], project, canvasSize, frame.alpha, imageCache);
-    return;
+  const alpha = resolveFrameAlphaAt(t, timeline, project.settings.transitionMs);
+  if (alpha <= 0) return;
+
+  ctx.save();
+  if (project.settings.background !== TRANSPARENT) {
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = project.settings.background;
+    ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
   }
-  drawSlideLayer(ctx, project.slides[frame.fromIndex], project, canvasSize, 1 - frame.progress, imageCache);
-  drawSlideLayer(ctx, project.slides[frame.toIndex], project, canvasSize, frame.progress, imageCache);
+
+  const msSinceHoldStart = t - timeline.holdStart;
+  const holdDurationMs = timeline.holdEnd - timeline.holdStart;
+  const sorted = [...project.elements].sort((a, b) => a.z - b.z);
+  for (const element of sorted) {
+    drawElement(ctx, element, project, canvasSize, imageCache, alpha, msSinceHoldStart, holdDurationMs);
+  }
+  ctx.restore();
 }
 
 export function projectHasTransparency(project: Project): boolean {
-  if (project.settings.background === TRANSPARENT) return true;
-  return project.slides.some((s) => s.background === TRANSPARENT);
+  return project.settings.background === TRANSPARENT;
 }
 
 export function makeTimeline(project: Project): Timeline {
-  return buildTimeline(project.slides, project.settings.transitionMs);
+  return buildTimeline(project.settings.duration, project.settings.transitionMs);
 }

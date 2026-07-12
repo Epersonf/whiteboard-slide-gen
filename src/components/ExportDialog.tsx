@@ -87,7 +87,7 @@ export const ExportDialog = observer(function ExportDialog({ onClose }: { onClos
           </label>
           <label>
             <input type="radio" name="format" checked={format === 'json'} onChange={() => selectFormat('json')} />
-            JSON — projeto completo (tema + slides + imagens em base64)
+            JSON — projeto completo (tema + elementos + imagens em base64)
           </label>
           {hasTransparency && format === 'mp4' && (
             <p className="export-format__note">
@@ -119,7 +119,7 @@ export const ExportDialog = observer(function ExportDialog({ onClose }: { onClos
           ) : (
             <>
               {!isRunning && !downloadUrl && (
-                <button type="button" className="button button--primary" onClick={handleStart} disabled={project.slides.length === 0}>
+                <button type="button" className="button button--primary" onClick={handleStart}>
                   Iniciar exportação
                 </button>
               )}
