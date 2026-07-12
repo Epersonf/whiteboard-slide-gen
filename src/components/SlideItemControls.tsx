@@ -1,7 +1,7 @@
 import type { ChangeEvent } from 'react';
 import { useProjectStore } from '../store/projectContext';
 import { ColorField } from './ColorField';
-import { CURATED_FONTS, type ImageSlide, type TextSlide } from '../types';
+import { CURATED_FONTS, type ImageElement, type TextElement } from '../types';
 
 function readAsDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -12,23 +12,27 @@ function readAsDataURL(file: File): Promise<string> {
   });
 }
 
-export function TextControls({ slide }: { slide: TextSlide }) {
+export function TextElementFields({ slideId, element }: { slideId: string; element: TextElement }) {
   const project = useProjectStore();
-  const fontOverridden = slide.fontFamily !== undefined || slide.fontSize !== undefined;
-  const colorOverridden = slide.color !== undefined;
+  const fontOverridden = element.fontFamily !== undefined || element.fontSize !== undefined;
+  const colorOverridden = element.color !== undefined;
 
   return (
     <>
       <label className="field">
         <span>Conteúdo</span>
-        <textarea rows={3} value={slide.content} onChange={(e) => project.updateSlide(slide.id, { content: e.target.value })} />
+        <textarea
+          rows={3}
+          value={element.content}
+          onChange={(e) => project.updateElement(slideId, element.id, { content: e.target.value })}
+        />
       </label>
 
       <label className="field">
         <span>Alinhamento</span>
         <select
-          value={slide.align ?? 'center'}
-          onChange={(e) => project.updateSlide(slide.id, { align: e.target.value as 'left' | 'center' | 'right' })}
+          value={element.align ?? 'center'}
+          onChange={(e) => project.updateElement(slideId, element.id, { align: e.target.value as 'left' | 'center' | 'right' })}
         >
           <option value="left">Esquerda</option>
           <option value="center">Centro</option>
@@ -41,21 +45,21 @@ export function TextControls({ slide }: { slide: TextSlide }) {
           type="checkbox"
           checked={fontOverridden}
           onChange={(e) =>
-            project.updateSlide(slide.id, {
+            project.updateElement(slideId, element.id, {
               fontFamily: e.target.checked ? project.settings.fontFamily : undefined,
               fontSize: e.target.checked ? project.settings.fontSize : undefined,
             })
           }
         />
-        Personalizar fonte deste slide
+        Personalizar fonte
       </label>
       {fontOverridden && (
         <>
           <label className="field">
             <span>Fonte</span>
             <select
-              value={slide.fontFamily ?? project.settings.fontFamily}
-              onChange={(e) => project.updateSlide(slide.id, { fontFamily: e.target.value })}
+              value={element.fontFamily ?? project.settings.fontFamily}
+              onChange={(e) => project.updateElement(slideId, element.id, { fontFamily: e.target.value })}
             >
               {CURATED_FONTS.map((f) => (
                 <option key={f.family} value={f.family}>
@@ -65,13 +69,13 @@ export function TextControls({ slide }: { slide: TextSlide }) {
             </select>
           </label>
           <label className="field">
-            <span>Tamanho ({slide.fontSize ?? project.settings.fontSize}px)</span>
+            <span>Tamanho ({element.fontSize ?? project.settings.fontSize}px)</span>
             <input
               type="range"
               min={16}
               max={140}
-              value={slide.fontSize ?? project.settings.fontSize}
-              onChange={(e) => project.updateSlide(slide.id, { fontSize: Number(e.target.value) })}
+              value={element.fontSize ?? project.settings.fontSize}
+              onChange={(e) => project.updateElement(slideId, element.id, { fontSize: Number(e.target.value) })}
             />
           </label>
         </>
@@ -81,22 +85,24 @@ export function TextControls({ slide }: { slide: TextSlide }) {
         <input
           type="checkbox"
           checked={colorOverridden}
-          onChange={(e) => project.updateSlide(slide.id, { color: e.target.checked ? project.settings.textColor : undefined })}
+          onChange={(e) =>
+            project.updateElement(slideId, element.id, { color: e.target.checked ? project.settings.textColor : undefined })
+          }
         />
-        Personalizar cor do texto deste slide
+        Personalizar cor do texto
       </label>
       {colorOverridden && (
         <ColorField
           label="Cor do texto"
-          value={slide.color ?? project.settings.textColor}
-          onChange={(color) => project.updateSlide(slide.id, { color })}
+          value={element.color ?? project.settings.textColor}
+          onChange={(color) => project.updateElement(slideId, element.id, { color })}
         />
       )}
     </>
   );
 }
 
-export function ImageControls({ slide }: { slide: ImageSlide }) {
+export function ImageElementFields({ slideId, element }: { slideId: string; element: ImageElement }) {
   const project = useProjectStore();
 
   async function replaceImage(e: ChangeEvent<HTMLInputElement>) {
@@ -104,19 +110,22 @@ export function ImageControls({ slide }: { slide: ImageSlide }) {
     e.target.value = '';
     if (!file) return;
     const src = await readAsDataURL(file);
-    project.updateSlide(slide.id, { src });
+    project.updateElement(slideId, element.id, { src });
   }
 
   return (
     <>
-      {slide.src && <img src={slide.src} alt="" className="slide-item__thumb" />}
+      {element.src && <img src={element.src} alt="" className="slide-item__thumb" />}
       <label className="field">
         <span>Substituir imagem</span>
         <input type="file" accept="image/*" onChange={replaceImage} />
       </label>
       <label className="field">
         <span>Enquadramento</span>
-        <select value={slide.fit ?? 'contain'} onChange={(e) => project.updateSlide(slide.id, { fit: e.target.value as 'contain' | 'cover' })}>
+        <select
+          value={element.fit ?? 'contain'}
+          onChange={(e) => project.updateElement(slideId, element.id, { fit: e.target.value as 'contain' | 'cover' })}
+        >
           <option value="contain">Conter</option>
           <option value="cover">Preencher</option>
         </select>

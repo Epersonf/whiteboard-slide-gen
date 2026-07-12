@@ -1,22 +1,23 @@
-import type { ProjectSettings, Slide } from '../types';
+import type { ProjectSettings, Slide, TextElement } from '../types';
 
-export type ResolvedSlideStyle = {
-  background: string;
-  color?: string;
-  fontFamily?: string;
-  fontSize?: number;
-  align?: 'left' | 'center' | 'right';
+/** Cor de fundo efetiva do slide: valor próprio, senão o padrão do projeto. */
+export function resolveSlideBackground(slide: Slide, settings: ProjectSettings): string {
+  return slide.background ?? settings.background;
+}
+
+export type ResolvedTextStyle = {
+  color: string;
+  fontFamily: string;
+  fontSize: number;
+  align: 'left' | 'center' | 'right';
 };
 
-/** Resolve cor/fonte efetivas de um slide: valor próprio, senão o padrão do projeto. */
-export function resolveSlideStyle(slide: Slide, settings: ProjectSettings): ResolvedSlideStyle {
-  const background = slide.background ?? settings.background;
-  if (slide.type === 'image') return { background };
+/** Cor/fonte efetivas de um elemento de texto: valor próprio, senão o padrão do projeto. */
+export function resolveTextElementStyle(element: TextElement, settings: ProjectSettings): ResolvedTextStyle {
   return {
-    background,
-    color: slide.color ?? settings.textColor,
-    fontFamily: slide.fontFamily ?? settings.fontFamily,
-    fontSize: slide.fontSize ?? settings.fontSize,
-    align: slide.align ?? 'center',
+    color: element.color ?? settings.textColor,
+    fontFamily: element.fontFamily ?? settings.fontFamily,
+    fontSize: element.fontSize ?? settings.fontSize,
+    align: element.align ?? 'center',
   };
 }

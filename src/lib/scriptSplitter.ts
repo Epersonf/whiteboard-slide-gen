@@ -1,13 +1,14 @@
-import { clamp, type TextSlide } from '../types';
+import { clamp, type Slide } from '../types';
 
 /**
  * Heurística de texto determinística — não usa IA, roda instantaneamente e
- * sem rede. Divide um roteiro colado em slides de texto:
+ * sem rede. Divide um roteiro colado em slides de texto (um elemento de
+ * texto por slide, ocupando a maior parte do quadro):
  * 1. Por parágrafo (linha em branco), se o roteiro já vier formatado assim.
  * 2. Senão (bloco único longo), por frase, agrupando até um teto de caracteres.
  * Duração de cada slide é estimada pela contagem de palavras.
  */
-export function splitScript(raw: string): TextSlide[] {
+export function splitScript(raw: string): Slide[] {
   const text = raw.trim();
   if (!text) return [];
 
@@ -36,9 +37,13 @@ export function splitScript(raw: string): TextSlide[] {
     }
   }
 
-  return paragraphs.map((p): TextSlide => {
+  return paragraphs.map((p): Slide => {
     const words = p.split(/\s+/).filter(Boolean).length;
     const duration = Math.round(clamp(words / 2.3, 2.5, 10) * 2) / 2;
-    return { id: crypto.randomUUID(), type: 'text', content: p, duration };
+    return {
+      id: crypto.randomUUID(),
+      duration,
+      elements: [{ id: crypto.randomUUID(), type: 'text', content: p, x: 10, y: 35, z: 0, width: 80, height: 30 }],
+    };
   });
 }

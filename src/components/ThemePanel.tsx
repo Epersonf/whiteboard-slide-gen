@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { useProjectStore } from '../store/projectContext';
 import { ColorField } from './ColorField';
+import { CollapsiblePanel } from './CollapsiblePanel';
 import { CURATED_FONTS } from '../types';
 
 export const ThemePanel = observer(function ThemePanel() {
@@ -8,9 +9,7 @@ export const ThemePanel = observer(function ThemePanel() {
   const s = project.settings;
 
   return (
-    <section className="panel">
-      <h2 className="panel__title">Tema do projeto</h2>
-
+    <CollapsiblePanel title="Tema do projeto">
       <ColorField
         label="Cor de fundo"
         value={s.background}
@@ -63,6 +62,6 @@ export const ThemePanel = observer(function ThemePanel() {
           onChange={(e) => project.updateSettings({ transitionMs: Number(e.target.value) })}
         />
       </label>
-    </section>
+    </CollapsiblePanel>
   );
 });

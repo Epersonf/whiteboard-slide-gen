@@ -1,26 +1,51 @@
 import { observer } from 'mobx-react-lite';
-import { useState } from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 import { useProjectStore } from '../store/projectContext';
 import { usePlaybackStore } from '../store/playbackContext';
 import { ColorField } from './ColorField';
-import { TextControls, ImageControls } from './SlideItemControls';
+import { SlideElementRow } from './SlideElementRow';
 import type { Slide } from '../types';
 
 function snippet(slide: Slide): string {
-  if (slide.type === 'text') return slide.content.trim().slice(0, 60) || '(vazio)';
-  return 'Imagem';
+  const text = slide.elements.find((el) => el.type === 'text');
+  if (text) return text.content.trim().slice(0, 60) || '(vazio)';
+  const images = slide.elements.filter((el) => el.type === 'image').length;
+  if (images > 0) return images === 1 ? 'Imagem' : `${images} imagens`;
+  return '(slide vazio)';
+}
+
+function readAsDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 }
 
 export const SlideListItem = observer(function SlideListItem({ slide, index, total }: { slide: Slide; index: number; total: number }) {
   const project = useProjectStore();
   const playback = usePlaybackStore();
   const [expanded, setExpanded] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isActive = playback.currentIndex === index;
   const bgOverridden = slide.background !== undefined;
 
   function selectThis() {
     playback.setIndex(index);
+  }
+
+  function addText() {
+    project.addElement(slide.id, project.newTextElement(slide));
+  }
+
+  async function handleAddImage(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const src = await readAsDataURL(file);
+    project.addElement(slide.id, project.newImageElement(slide, src));
   }
 
   return (
@@ -43,8 +68,6 @@ export const SlideListItem = observer(function SlideListItem({ slide, index, tot
 
       {expanded && (
         <div className="slide-item__controls">
-          {slide.type === 'text' ? <TextControls slide={slide} /> : <ImageControls slide={slide} />}
-
           <label className="field">
             <span>Duração ({slide.duration}s)</span>
             <input
@@ -74,6 +97,24 @@ export const SlideListItem = observer(function SlideListItem({ slide, index, tot
               onChange={(background) => project.updateSlide(slide.id, { background })}
             />
           )}
+
+          <div className="slide-item__elements">
+            <h3 className="slide-item__elements-title">Elementos ({slide.elements.length})</h3>
+            <ul className="element-list">
+              {slide.elements.map((element) => (
+                <SlideElementRow key={element.id} slide={slide} element={element} />
+              ))}
+            </ul>
+            <div className="add-slide-buttons">
+              <button type="button" className="button" onClick={addText}>
+                + Texto
+              </button>
+              <button type="button" className="button" onClick={() => fileInputRef.current?.click()}>
+                + Imagem
+              </button>
+              <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={handleAddImage} />
+            </div>
+          </div>
         </div>
       )}
     </li>

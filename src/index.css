@@ -158,13 +158,17 @@ button, input, select, textarea {
 .stage__layer {
   position: absolute;
   inset: 0;
-  display: flex;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .stage__layer {
     transition-duration: 0.01ms !important;
   }
+}
+
+.stage__element {
+  position: absolute;
+  overflow: hidden;
 }
 
 .stage__image {
@@ -228,10 +232,22 @@ button, input, select, textarea {
   background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 16px;
+  overflow: hidden;
+}
+
+.panel__header {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+  background: none;
+  border: none;
+}
+
+button.panel__header {
+  cursor: pointer;
 }
 
 .panel__title {
@@ -240,6 +256,19 @@ button, input, select, textarea {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   opacity: 0.75;
+  text-align: left;
+}
+
+.panel__chevron {
+  opacity: 0.6;
+  font-size: 12px;
+}
+
+.panel__body {
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .field {
@@ -453,6 +482,116 @@ button, input, select, textarea {
 .add-slide-buttons {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Elementos dentro de um slide */
+.slide-item__elements {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slide-item__elements-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+  margin: 0;
+}
+
+.element-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.element-row {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.element-row__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+}
+
+.element-row__toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  text-align: left;
+  font-size: 13px;
+}
+
+.element-row__type {
+  flex-shrink: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  opacity: 0.6;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+.element-row__snippet {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.element-row__actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.element-row__actions button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.element-row__actions button:hover {
+  background: var(--border);
+}
+
+.element-row__body {
+  padding: 8px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.position-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.element-row__zactions {
+  display: flex;
+  gap: 8px;
 }
 
 /* Modal / Export dialog */
@@ -477,6 +616,34 @@ button, input, select, textarea {
   flex-direction: column;
   gap: 14px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  padding: 8px 14px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  opacity: 0.7;
+  font-size: 14px;
+}
+
+.tab--active {
+  opacity: 1;
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.modal__hint {
+  font-size: 13px;
+  opacity: 0.75;
+  margin: 0;
 }
 
 .export-format {

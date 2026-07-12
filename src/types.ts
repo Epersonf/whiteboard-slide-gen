@@ -1,18 +1,24 @@
-// Contratos centrais do editor de slides. 'Slide' é a união discriminada
-// usada em toda a árvore de componentes e no pipeline de exportação.
+// Contratos centrais do editor de slides. Um slide é um canvas com uma ou
+// mais 'elements' (texto e/ou imagem) posicionados livremente por x/y/z.
 
 /** Cor hex ("#rrggbb") ou o literal 'transparent' (fundo sem cor, canal alpha). */
 export type BackgroundColor = string;
 
 export const TRANSPARENT: BackgroundColor = 'transparent';
 
-export type SlideBase = {
+export type ElementBase = {
   id: string;
-  duration: number; // segundos — tempo visível, sem contar a transição
-  background?: BackgroundColor; // se ausente, herda ProjectSettings.background
+  /** Posição do canto superior-esquerdo, em % da largura/altura do canvas (0-100). */
+  x: number;
+  y: number;
+  /** Ordem de empilhamento — maior fica por cima. */
+  z: number;
+  /** Tamanho da caixa do elemento, em % da largura/altura do canvas (0-100). */
+  width: number;
+  height: number;
 };
 
-export type TextSlide = SlideBase & {
+export type TextElement = ElementBase & {
   type: 'text';
   content: string;
   fontFamily?: string; // se ausente, herda ProjectSettings.fontFamily
@@ -21,27 +27,35 @@ export type TextSlide = SlideBase & {
   align?: 'left' | 'center' | 'right'; // default: 'center'
 };
 
-export type ImageSlide = SlideBase & {
+export type ImageElement = ElementBase & {
   type: 'image';
-  src: string; // data URL
+  /** Sempre um data URL (base64) — garante que o .json de exportação leve a imagem embutida. */
+  src: string;
   fit?: 'contain' | 'cover'; // default: 'contain'
 };
 
-export type Slide = TextSlide | ImageSlide;
+export type SlideElement = TextElement | ImageElement;
+
+export type Slide = {
+  id: string;
+  duration: number; // segundos — tempo visível, sem contar a transição
+  background?: BackgroundColor; // se ausente, herda ProjectSettings.background
+  elements: SlideElement[];
+};
 
 export type ExportFormat = 'mp4' | 'webm';
 
 export type ProjectSettings = {
   background: BackgroundColor; // cor de fundo padrão do projeto (hex ou 'transparent')
   textColor: string; // cor de texto padrão do projeto (hex)
-  fontFamily: string; // fonte padrão para novos slides de texto
+  fontFamily: string; // fonte padrão para novos elementos de texto
   fontSize: number; // tamanho padrão (px)
   duration: number; // duração padrão (segundos) para novos slides
   transitionMs: number; // duração do fade — padronizada, um único valor pro projeto inteiro
   canvasWidth: number; // resolução de exportação, ex.: 1920
   canvasHeight: number; // ex.: 1080 (fixo em 16:9 no v1)
   fps: number; // ex.: 30
-  exportFormat: ExportFormat; // formato preferido de exportação
+  exportFormat: ExportFormat; // formato preferido de exportação em vídeo
 };
 
 export type Project = {

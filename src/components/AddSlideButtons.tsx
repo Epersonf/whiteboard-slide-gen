@@ -18,8 +18,7 @@ export const AddSlideButtons = observer(function AddSlideButtons() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function addText() {
-    const slide = project.newTextSlide();
-    project.addSlide(slide);
+    project.addSlide(project.newSlideWithText());
     playback.setIndex(project.slides.length - 1);
   }
 
@@ -28,18 +27,17 @@ export const AddSlideButtons = observer(function AddSlideButtons() {
     e.target.value = '';
     if (!file) return;
     const src = await readAsDataURL(file);
-    const slide = project.newImageSlide(src);
-    project.addSlide(slide);
+    project.addSlide(project.newSlideWithImage(src));
     playback.setIndex(project.slides.length - 1);
   }
 
   return (
     <div className="add-slide-buttons">
       <button type="button" className="button" onClick={addText}>
-        + Texto
+        + Slide de texto
       </button>
       <button type="button" className="button" onClick={() => fileInputRef.current?.click()}>
-        + Imagem
+        + Slide de imagem
       </button>
       <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={handleFileChange} />
     </div>

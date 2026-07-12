@@ -1,7 +1,6 @@
 import { Stage } from './Stage';
 import { Transport } from './Transport';
 import { ThemePanel } from './ThemePanel';
-import { ScriptSplitter } from './ScriptSplitter';
 import { SlideList } from './SlideList';
 
 export function MainLayout() {
@@ -13,7 +12,6 @@ export function MainLayout() {
       </div>
       <div className="side-column">
         <ThemePanel />
-        <ScriptSplitter />
         <SlideList />
       </div>
     </div>

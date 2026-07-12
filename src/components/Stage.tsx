@@ -2,7 +2,8 @@ import { observer } from 'mobx-react-lite';
 import { useEffect, useRef, useState } from 'react';
 import { useProjectStore } from '../store/projectContext';
 import { usePlaybackStore } from '../store/playbackContext';
-import { computeSlideLayout } from '../lib/layout';
+import { resolveSlideBackground, resolveTextElementStyle } from '../lib/resolveStyle';
+import { textPadding } from '../lib/layout';
 import { TRANSPARENT } from '../types';
 
 export const Stage = observer(function Stage() {
@@ -29,14 +30,11 @@ export const Stage = observer(function Stage() {
   return (
     <div className="stage" ref={outerRef} style={{ aspectRatio: `${canvasWidth} / ${canvasHeight}` }}>
       <div className="stage__checker" aria-hidden="true" />
-      <div
-        className="stage__canvas"
-        style={{ width: canvasWidth, height: canvasHeight, transform: `scale(${scale})` }}
-      >
+      <div className="stage__canvas" style={{ width: canvasWidth, height: canvasHeight, transform: `scale(${scale})` }}>
         {project.slides.map((slide, index) => {
-          const layout = computeSlideLayout(slide, project.settings, { width: canvasWidth, height: canvasHeight });
+          const background = resolveSlideBackground(slide, project.settings);
           const visible = index === clampedIndex;
-          const align = slide.type === 'text' ? (layout.style.align ?? 'center') : 'center';
+          const sorted = [...slide.elements].sort((a, b) => a.z - b.z);
           return (
             <div
               key={slide.id}
@@ -44,28 +42,47 @@ export const Stage = observer(function Stage() {
               style={{
                 opacity: visible ? 1 : 0,
                 transition: transitionCss,
-                background: layout.style.background === TRANSPARENT ? 'transparent' : layout.style.background,
+                background: background === TRANSPARENT ? 'transparent' : background,
               }}
             >
-              {slide.type === 'image' ? (
-                <img src={slide.src} alt="" className="stage__image" style={{ objectFit: slide.fit ?? 'contain' }} />
-              ) : (
+              {sorted.map((element) => (
                 <div
-                  className="stage__text"
+                  key={element.id}
+                  className="stage__element"
                   style={{
-                    padding: layout.padding,
-                    color: layout.style.color,
-                    fontFamily: layout.style.fontFamily,
-                    fontSize: layout.style.fontSize,
-                    lineHeight: `${layout.lineHeight}px`,
-                    justifyContent: align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center',
+                    left: `${element.x}%`,
+                    top: `${element.y}%`,
+                    width: `${element.width}%`,
+                    height: `${element.height}%`,
+                    zIndex: element.z,
                   }}
                 >
-                  <div className="stage__text-inner" style={{ textAlign: align }}>
-                    {slide.content}
-                  </div>
+                  {element.type === 'image' ? (
+                    <img src={element.src} alt="" className="stage__image" style={{ objectFit: element.fit ?? 'contain' }} />
+                  ) : (
+                    (() => {
+                      const style = resolveTextElementStyle(element, project.settings);
+                      return (
+                        <div
+                          className="stage__text"
+                          style={{
+                            padding: textPadding(style.fontSize),
+                            color: style.color,
+                            fontFamily: style.fontFamily,
+                            fontSize: style.fontSize,
+                            lineHeight: 1.35,
+                            justifyContent: style.align === 'left' ? 'flex-start' : style.align === 'right' ? 'flex-end' : 'center',
+                          }}
+                        >
+                          <div className="stage__text-inner" style={{ textAlign: style.align }}>
+                            {element.content}
+                          </div>
+                        </div>
+                      );
+                    })()
+                  )}
                 </div>
-              )}
+              ))}
             </div>
           );
         })}
